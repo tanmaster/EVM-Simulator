@@ -19,8 +19,7 @@ In order to be able to read out the state variables and the world state during t
 necessary to swap out some of the modules that are used by py-evm. Thanks to the modularity of it, injecting custom 
 classes and overriding relevant functions was possible without much effort. 
 
-The project was initially forked from 
-
+This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
 
 ## Quickstart
 Here are some OS specific instructions on how to setup further necessary packages as well as the virtual environment:
@@ -48,7 +47,7 @@ cd EVM-Simulator/
 virtualenv -p python3 venv
 . venv/bin/activate
 
-pip install -e .[dev]
+pip3 install -e .[dev]
 # running the application
 python app/main.py
 ```

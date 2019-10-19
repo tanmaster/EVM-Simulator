@@ -6,7 +6,7 @@ from eth_typing import Address
 from eth_utils import decode_hex
 
 from app.evmhandler import EVMHandler
-from app.util import MyContract
+from app.util.util import MyContract
 
 logger = logging.getLogger(__name__)
 
