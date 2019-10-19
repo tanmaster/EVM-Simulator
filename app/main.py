@@ -18,7 +18,7 @@ from app import evmhandler
 from app.util.changes import ChangeChainLink, TableWidgetEnum, ChangeChain, History
 from app.evmhandler import EVMHandler, MASTER_ADDRESS
 from app.subcomponents.mycomputation import MyComputation
-from app.util.worker_util import TransactionWorker, ContractWorker, BaseWorker
+from app.util.workers import TransactionWorker, ContractWorker, BaseWorker
 from app.ui.ui_add_addresses import Ui_AddAdressesDialog
 from app.ui.ui_add_contract import Ui_AddContractDialog
 from app.ui.ui_main import Ui_MainWindow

@@ -1,4 +1,5 @@
 # EVM-Simulator
+<img align="left" width="100" height="100" src="app/icon.png">
 
 This project was created during the course of a Bachelor's Thesis at the Vienna University of Technology. Its goal is to
 provide the ability to observe the effects of transactions within the Ethereum Virtual Machine during their execution 
@@ -47,8 +48,10 @@ cd EVM-Simulator/
 virtualenv -p python3 venv
 . venv/bin/activate
 
+# install dependencies
 pip3 install -e .[dev]
-# running the application
+
+# run the application
 python app/main.py
 ```
 
