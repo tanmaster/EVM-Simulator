@@ -25,7 +25,7 @@ from app.ui.ui_main import Ui_MainWindow
 from app.ui.ui_set_gas_limit import Ui_SetGasLimitDialog
 from app.ui.ui_set_gas_price import Ui_SetGasPriceDialog
 from app.ui.ui_set_storage import Ui_set_storage_dialog
-from app.util.util import MyContract, MyTransaction, hex2
+from app.util.util import MyContract, MyTransaction, hex2, MyAddress
 import operator
 
 logger = logging.getLogger(__name__)
@@ -105,6 +105,9 @@ class ApplicationWindow(QMainWindow):
         self.step_lock.acquire(True)
         self.storage_lock.acquire(True)
 
+        logger.info("Put master Account into observed Accounts")
+        self.relevant_addresses["0x" + MASTER_ADDRESS.hex()] = MyAddress(MASTER_ADDRESS.hex())
+        self._refresh_relevant_addresses()
         if sys.platform.__contains__("linux"):
             logger.info("Prettify UI for linux")
             font: QFont = QFont("Ubuntu")
