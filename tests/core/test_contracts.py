@@ -111,7 +111,7 @@ class TestContracts(TestCase):
         """
         Creates a contract that uses a modifier which checks whether msg.value > 1. A variable is incremented if true.
         The function is first called with a value of 1 wei which should increment the value.
-        Then the function is called with a value of 0 wei which should result in an error and the value should remain 1.
+        Then the function is called with a value of 0 wei which should show_result_cb in an error and the value should remain 1.
         :return:
         """
         modifier_contract = get_contract("Modifier")

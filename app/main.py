@@ -40,17 +40,17 @@ class ApplicationWindow(QMainWindow):
         logger.info("Prettify UI.")
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.actionAddress_Balance.triggered.connect(self.new_address_clicked)
-        self.ui.actionContract.triggered.connect(self.new_contract_clicked)
-        self.ui.actionSet_Gas_Limit.triggered.connect(self.set_gas_limit)
-        self.ui.actionSet_Gas_Price.triggered.connect(self.set_gas_price)
-        self.ui.actionStorage.triggered.connect(self.set_storage_dialog)
+        self.ui.actionAddress_Balance.triggered.connect(self.show_set_balance_dialog)
+        self.ui.actionContract.triggered.connect(self.show_set_contract_dialog)
+        self.ui.actionSet_Gas_Limit.triggered.connect(self.show_set_gas_limit_dialog)
+        self.ui.actionSet_Gas_Price.triggered.connect(self.show_set_gas_price_dialog)
+        self.ui.actionStorage.triggered.connect(self.show_set_storage_dialog)
         self.relevant_addresses = {}
         self.blockLabel = QLabel()
         self.statusLabel = QLabel()
         self.statusBar().addPermanentWidget(self.blockLabel)
         self.statusBar().addWidget(self.statusLabel)
-        self.refresh_statusbar()
+        self._refresh_statusbar()
         self.ui.select_function_combobox.currentIndexChanged.connect(self.contract_function_selected)
         self.ui.send_transaction_button.clicked.connect(self.send_transaction_clicked)
         self.ui.select_function_combobox.hide()
@@ -70,8 +70,8 @@ class ApplicationWindow(QMainWindow):
 
         logger.info("Connecting buttons to callbacks.")
         self.ui.abort_automode_button.clicked.connect(self.abort_clicked)
-        self.ui.debug_checkbox.stateChanged.connect(self.show_debug_widgets)
-        self.ui.automode_checkbox.stateChanged.connect(self.show_step_widgets)
+        self.ui.debug_checkbox.stateChanged.connect(self.debug_mode_changed)
+        self.ui.automode_checkbox.stateChanged.connect(self.auto_mode_changed)
         self.ui.steps_button.clicked.connect(self.steps_clicked)
 
         logger.info("Initializing objects needed for debugging")
@@ -112,7 +112,54 @@ class ApplicationWindow(QMainWindow):
             for w in qApp.allWidgets():
                 w.setFont(font)
 
-    def set_storage_dialog(self):
+    def steps_clicked(self):
+        val = self._parse_string(self.ui.steps_line_edit.text(), int, [(operator.ge, [1])])
+        if val is not None:
+            self._refresh_statusbar()
+            self.step_semaphore.release(val)
+
+    def abort_clicked(self):
+        logger.info("Abort has been clicked!")
+        MyComputation.abort = True
+        self._refresh_statusbar("Aborting Transaction")
+
+    def auto_mode_changed(self, i: int):
+        if i > 0:
+            self.ui.step_duration_label.show()
+            self.ui.step_duration_le.show()
+            self.ui.steps_button.hide()
+            self.ui.steps_line_edit.hide()
+        else:
+            self.ui.steps_button.show()
+            self.ui.steps_line_edit.show()
+            self.ui.step_duration_label.hide()
+            self.ui.step_duration_le.hide()
+
+    def debug_mode_changed(self, i: int):
+        if i > 0:
+            self.ui.automode_checkbox.show()
+            if self.ui.automode_checkbox.checkState():
+                self.ui.step_duration_label.show()
+                self.ui.step_duration_le.show()
+            self.ui.storage_table_widget.show()
+            self.ui.execution_groupbox.show()
+            self.ui.message_groupbox.show()
+            self.ui.opcodes_table_widget.show()
+            self.ui.stack_table_widget.show()
+            self.ui.memory_table_widget.show()
+        else:
+            self.ui.automode_checkbox.hide()
+            self.ui.step_duration_label.hide()
+            self.ui.step_duration_le.hide()
+            self.ui.storage_table_widget.hide()
+            self.ui.execution_groupbox.hide()
+            self.ui.message_groupbox.hide()
+            self.ui.opcodes_table_widget.hide()
+            self.ui.stack_table_widget.hide()
+            self.ui.memory_table_widget.hide()
+        pass
+
+    def show_set_storage_dialog(self):
         set_storage_dialog = QDialog()
         ui = Ui_set_storage_dialog()
         ui.setupUi(set_storage_dialog)
@@ -178,7 +225,7 @@ class ApplicationWindow(QMainWindow):
                     except ValidationError:
                         err = True
                     if parsed is None or err:
-                        self.refresh_statusbar(le.text() + " is not a valid address")
+                        self._refresh_statusbar(le.text() + " is not a valid address")
                         return
                 st = "Successfully set storage values"
                 for i in range(0, fl.count()):
@@ -194,203 +241,17 @@ class ApplicationWindow(QMainWindow):
                                 st = "Could not set at least one slot"
                                 continue
                             self.evm_handler.set_storage(addr, slot, val)
-                            self.set_storage(addr, hex2(slot), hex2(val))
-                self.refresh_statusbar(st)
+                            self.set_storage_signal_cb(addr, hex2(slot), hex2(val))
+                self._refresh_statusbar(st)
             self.setting_storage = False
 
-    def steps_clicked(self):
-        val = self._parse_string(self.ui.steps_line_edit.text(), int, [(operator.ge, [1])])
-        if val is not None:
-            self.refresh_statusbar()
-            self.step_semaphore.release(val)
-
-    def abort_clicked(self):
-        logger.info("Abort has been clicked!")
-        MyComputation.abort = True
-        self.refresh_statusbar("Aborting Transaction")
-
-    def transaction_aborted(self):
-        self.transaction_sent()
-        self._clear_table_widget(TableWidgetEnum.MEMORY)
-        self._clear_table_widget(TableWidgetEnum.STACK)
-        self.refresh_statusbar("Transaction aborted")
-        MyComputation.abort = False
-
-    def show_step_widgets(self, i: int):
-        if i > 0:
-            self.ui.step_duration_label.show()
-            self.ui.step_duration_le.show()
-            self.ui.steps_button.hide()
-            self.ui.steps_line_edit.hide()
-        else:
-            self.ui.steps_button.show()
-            self.ui.steps_line_edit.show()
-            self.ui.step_duration_label.hide()
-            self.ui.step_duration_le.hide()
-
-    def show_debug_widgets(self, i: int):
-        if i > 0:
-            self.ui.automode_checkbox.show()
-            if self.ui.automode_checkbox.checkState():
-                self.ui.step_duration_label.show()
-                self.ui.step_duration_le.show()
-            self.ui.storage_table_widget.show()
-            self.ui.execution_groupbox.show()
-            self.ui.message_groupbox.show()
-            self.ui.opcodes_table_widget.show()
-            self.ui.stack_table_widget.show()
-            self.ui.memory_table_widget.show()
-        else:
-            self.ui.automode_checkbox.hide()
-            self.ui.step_duration_label.hide()
-            self.ui.step_duration_le.hide()
-            self.ui.storage_table_widget.hide()
-            self.ui.execution_groupbox.hide()
-            self.ui.message_groupbox.hide()
-            self.ui.opcodes_table_widget.hide()
-            self.ui.stack_table_widget.hide()
-            self.ui.memory_table_widget.hide()
-        pass
-
-    def set_gas_limit(self):
+    def show_set_gas_limit_dialog(self):
         self._set_gas_price_or_limit(set_price=False)
 
-    def set_gas_price(self):
+    def show_set_gas_price_dialog(self):
         self._set_gas_price_or_limit(set_price=True)
 
-    def refresh_relevant_addresses_table_widget(self):
-        """ should refresh all balances at least... """
-        self._clear_table_widget(TableWidgetEnum.ADDRESSES)
-        for addr in self.relevant_addresses.values():
-            c = self.ui.used_addresses_table_widget.rowCount()
-            self.ui.used_addresses_table_widget.insertRow(c)
-            a = QTableWidgetItem()
-            a.setText(addr.get_readable_address())
-            b = QTableWidgetItem()
-            bal = self.evm_handler.get_balance(addr.get_typed_address())
-            b.setText(str(bal) + " wei")
-            b.setTextAlignment(130)
-            t = QTableWidgetItem()
-            t.setText("Account" if self.evm_handler.get_code(addr.get_typed_address()) == b'' else "Contract")
-            self.ui.used_addresses_table_widget.setItem(c, 0, a)
-            self.ui.used_addresses_table_widget.setItem(c, 1, b)
-            self.ui.used_addresses_table_widget.setItem(c, 2, t)
-
-    def send_transaction_clicked(self):
-        con: MyContract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
-        if con is None:
-            self.refresh_statusbar("Please Load a Contract first via New -> Contract")
-            return
-        step_duration = self._parse_string(self.ui.step_duration_le.text(), float, [(operator.gt, [0])])
-        wei = self._parse_string(self.ui.value_le.text(), int, [(operator.ge, [0])])
-        if step_duration is None or wei is None:
-            return
-        inputs: [] = con.get_function_params(self.ui.select_function_combobox.currentIndex())
-        args: [{}] = []
-        for i in range(0, self.ui.function_params_form_layout.rowCount()):
-            value = self.ui.function_params_form_layout.itemAt(2 * i + 1).widget().text()
-            props = inputs[i]._asdict()  # turn namedtuple into dictionary
-            args.append({"type": props.get("type"), "name": props.get("name"), 'value': value})
-        self.pre_transaction_handling()
-        worker: TransactionWorker = TransactionWorker(self.evm_handler.call_contract_function, con.get_typed_address(),
-                                                      self.ui.select_function_combobox.currentText(), args,
-                                                      self._current_debug_mode(), wei,
-                                                      storage_lookup=self.storage_lookup, init_lock=self.init_lock,
-                                                      step_lock=self.step_lock, storage_lock=self.storage_lock,
-                                                      step_semaphore=self.step_semaphore, step_duration=step_duration
-                                                      )
-        self._connect_signals_and_start_worker(worker)
-
-    def result(self, result: bytes):
-        if result != b'':
-            d = QDialog()
-            d.setBaseSize(300, 300)
-            te = QPlainTextEdit(d)
-            te.setFixedSize(290, 270)
-            te.setPlainText(encode_hex(result))
-            b1 = QPushButton("OK", d)
-            b1.clicked.connect(d.close)
-            b1.move(250, 270)
-            d.setWindowTitle("Return Value")
-            d.setWindowModality(Qt.ApplicationModal)
-            d.exec_()
-
-    def transaction_sent(self):
-        self.post_transaction_handling()
-        self.refresh_statusbar("Transaction mined successfully.")
-
-    def contract_function_selected(self):
-        self.ui.select_function_combobox.show()
-        con = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
-        fp = con.get_function_params(self.ui.select_function_combobox.currentIndex())
-        while self.ui.function_params_form_layout.rowCount() > 0:
-            self.ui.function_params_form_layout.removeRow(0)
-
-        for p in fp:
-            le = QLineEdit()
-            le.setPlaceholderText(p.type)
-            self.ui.function_params_form_layout.addRow(p.name + ":", le)
-
-    def contract_selected(self):
-        self.ui.select_function_combobox.clear()
-        self.current_contract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
-        self.ui.select_function_combobox.addItems(self.current_contract.signatures)
-        self._refresh_storage(Address(decode_hex(self.ui.select_address_combobox.currentText()[2:])))
-
-    def new_contract_clicked(self):
-        AddContractDialog = QDialog()
-        ui = Ui_AddContractDialog()
-        ui.setupUi(AddContractDialog)
-        ui.info_label_2.linkActivated.connect(lambda link: QDesktopServices.openUrl(QUrl(link)))
-        ui.info_label.linkActivated.connect(lambda link: QDesktopServices.openUrl(QUrl(link)))
-        AddContractDialog.setFixedSize(AddContractDialog.size())
-        AddContractDialog.show()
-        if AddContractDialog.exec_() == QDialog.Accepted:
-            if ui.tabWidget.currentIndex() == 0:
-                try:
-                    self.pre_transaction_handling()
-                    step_duration = float(self.ui.step_duration_le.text())
-                    self.current_contract = MyContract(ui.abi_te.toPlainText(), ui.bytecode_te_2.toPlainText())
-                    self._clear_table_widget(TableWidgetEnum.STORAGE)
-                    qApp.processEvents()
-                    wei = self._parse_string(self.ui.value_le.text(), int, [(operator.ge, [0])])
-                    if wei is None:
-                        wei = 0
-                        self.refresh_statusbar("Invalid amount. Continue with " + str(wei))
-                    worker = ContractWorker(self.evm_handler.create_contract, self.current_contract.bytecode.object,
-                                            wei, self._current_debug_mode(), storage_lookup=self.storage_lookup,
-                                            init_lock=self.init_lock, step_lock=self.step_lock,
-                                            storage_lock=self.storage_lock, step_semaphore=self.step_semaphore,
-                                            step_duration=step_duration
-                                            )
-                    self._connect_signals_and_start_worker(worker)
-                except (TypeError, json.JSONDecodeError, ValueError) as e:
-                    self.refresh_statusbar("There was an error while creating the contract")
-                    print(e)
-            else:
-                self.current_contract = MyContract("[]", ui.bytecode_te.toPlainText())
-                addr = Address(decode_hex(ui.contract_le.text()))
-                addr = self.evm_handler.set_code(addr=addr, code=decode_hex(self.current_contract.bytecode.object))
-                self.storage_lookup[addr] = {}
-                self.contract_created(addr)
-
-    def contract_created(self, addr: Address):
-        if addr != b'':
-            self.current_contract.set_address(addr.hex())
-            a = self.current_contract.get_readable_address()
-            self.relevant_addresses[a] = self.current_contract
-            self.refresh_statusbar("Mined new Contract at address " + a)
-            if self.ui.select_address_combobox.currentText() == "Load a contract first!":
-                self.ui.select_address_combobox.clear()
-                self.ui.select_address_combobox.currentIndexChanged.connect(self.contract_selected)
-            cb: QComboBox = self.ui.select_address_combobox
-            cb.addItem(a)
-            cb.setCurrentIndex(cb.count() - 1)
-        else:
-            self.refresh_statusbar("Error processing transaction.")
-        self.post_transaction_handling()
-
-    def new_address_clicked(self):
+    def show_set_balance_dialog(self):
         Dialog = QDialog()
         dialog_ui = Ui_AddAdressesDialog()
         dialog_ui.setupUi(Dialog)
@@ -458,21 +319,163 @@ class ApplicationWindow(QMainWindow):
                     self.evm_handler.set_balance(Address(to), tx.val)
                     to = tx.addr.get_readable_address()
                     self.relevant_addresses[to] = tx.addr
-                    self.refresh_relevant_addresses_table_widget()
+                    self._refresh_relevant_addresses()
                 except (ValidationError, AssertionError, ValueError) as e:
                     st = "Could not set at least one balance"
-            self.refresh_statusbar(st)
+            self._refresh_statusbar(st)
 
-    def refresh_statusbar(self, status: str = ""):
-        self.blockLabel.setText("Current Block: " + str(self.evm_handler.get_block_number())
-                                + " | Gas Price: " + str(self.evm_handler.get_gas_price()) + " wei"
-                                + " | Current Gas Limit: " + str(self.evm_handler.get_gas_limit()))
-        self.statusLabel.setText("  " + status)
+    def show_set_contract_dialog(self):
+        AddContractDialog = QDialog()
+        ui = Ui_AddContractDialog()
+        ui.setupUi(AddContractDialog)
+        ui.info_label_2.linkActivated.connect(lambda link: QDesktopServices.openUrl(QUrl(link)))
+        ui.info_label.linkActivated.connect(lambda link: QDesktopServices.openUrl(QUrl(link)))
+        AddContractDialog.setFixedSize(AddContractDialog.size())
+        AddContractDialog.show()
+        if AddContractDialog.exec_() == QDialog.Accepted:
+            if ui.tabWidget.currentIndex() == 0:
+                try:
+                    self.pre_transaction_handling()
+                    step_duration = float(self.ui.step_duration_le.text())
+                    self.current_contract = MyContract(ui.abi_te.toPlainText(), ui.bytecode_te_2.toPlainText())
+                    self._clear_table_widget(TableWidgetEnum.STORAGE)
+                    qApp.processEvents()
+                    wei = self._parse_string(self.ui.value_le.text(), int, [(operator.ge, [0])])
+                    if wei is None:
+                        wei = 0
+                        self._refresh_statusbar("Invalid amount. Continue with " + str(wei))
+                    worker = ContractWorker(self.evm_handler.create_contract, self.current_contract.bytecode.object,
+                                            wei, self._current_debug_mode(), storage_lookup=self.storage_lookup,
+                                            init_lock=self.init_lock, step_lock=self.step_lock,
+                                            storage_lock=self.storage_lock, step_semaphore=self.step_semaphore,
+                                            step_duration=step_duration
+                                            )
+                    self._connect_signals_and_start_worker(worker)
+                except (TypeError, json.JSONDecodeError, ValueError) as e:
+                    self._refresh_statusbar("There was an error while creating the contract")
+                    print(e)
+            else:
+                self.current_contract = MyContract("[]", ui.bytecode_te.toPlainText())
+                addr = Address(decode_hex(ui.contract_le.text()))
+                addr = self.evm_handler.set_code(addr=addr, code=decode_hex(self.current_contract.bytecode.object))
+                self.storage_lookup[addr] = {}
+                self.contract_created_cb(addr)
 
-    def set_change_chain(self, chain: ChangeChain):
+    def send_transaction_clicked(self):
+        con: MyContract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
+        if con is None:
+            self._refresh_statusbar("Please Load a Contract first via New -> Contract")
+            return
+        step_duration = self._parse_string(self.ui.step_duration_le.text(), float, [(operator.gt, [0])])
+        wei = self._parse_string(self.ui.value_le.text(), int, [(operator.ge, [0])])
+        if step_duration is None or wei is None:
+            return
+        inputs: [] = con.get_function_params(self.ui.select_function_combobox.currentIndex())
+        args: [{}] = []
+        for i in range(0, self.ui.function_params_form_layout.rowCount()):
+            value = self.ui.function_params_form_layout.itemAt(2 * i + 1).widget().text()
+            props = inputs[i]._asdict()  # turn namedtuple into dictionary
+            args.append({"type": props.get("type"), "name": props.get("name"), 'value': value})
+        self.pre_transaction_handling()
+        worker: TransactionWorker = TransactionWorker(self.evm_handler.call_contract_function, con.get_typed_address(),
+                                                      self.ui.select_function_combobox.currentText(), args,
+                                                      self._current_debug_mode(), wei,
+                                                      storage_lookup=self.storage_lookup, init_lock=self.init_lock,
+                                                      step_lock=self.step_lock, storage_lock=self.storage_lock,
+                                                      step_semaphore=self.step_semaphore, step_duration=step_duration
+                                                      )
+        self._connect_signals_and_start_worker(worker)
+
+    def contract_function_selected(self):
+        self.ui.select_function_combobox.show()
+        con = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
+        fp = con.get_function_params(self.ui.select_function_combobox.currentIndex())
+        while self.ui.function_params_form_layout.rowCount() > 0:
+            self.ui.function_params_form_layout.removeRow(0)
+
+        for p in fp:
+            le = QLineEdit()
+            le.setPlaceholderText(p.type)
+            self.ui.function_params_form_layout.addRow(p.name + ":", le)
+
+    def contract_selected(self):
+        self.ui.select_function_combobox.clear()
+        self.current_contract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
+        self.ui.select_function_combobox.addItems(self.current_contract.signatures)
+        self._refresh_storage(Address(decode_hex(self.ui.select_address_combobox.currentText()[2:])))
+
+    def post_transaction_handling(self):
+        """
+        Post transaction processes.
+        """
+        self._refresh_relevant_addresses()
+        self._refresh_storage(Address(decode_hex(self.ui.select_address_combobox.currentText()[2:])))
+        self.ui.debug_checkbox.setDisabled(False)
+        self.ui.automode_checkbox.setDisabled(False)
+        self.ui.send_transaction_button.setDisabled(False)
+        self.ui.step_duration_label.setDisabled(False)
+        self.ui.step_duration_le.setDisabled(False)
+        self.ui.abort_automode_button.hide()
+
+    def pre_transaction_handling(self):
+        """
+        Prepares the UI and other objects for a transaction.
+        """
+        self.ui.debug_checkbox.setDisabled(True)
+        self.ui.automode_checkbox.setDisabled(True)
+        self.ui.send_transaction_button.setDisabled(True)
+        self.ui.step_duration_le.setDisabled(True)
+        self.ui.step_duration_label.setDisabled(True)
+        if self.ui.automode_checkbox.checkState():
+            self.ui.abort_automode_button.show()
+        self.change_chains: [ChangeChain] = []
+        self.step_semaphore = QSemaphore(1)
+
+    def transaction_sent_signal_cb(self):
+        self.post_transaction_handling()
+        self._refresh_statusbar("Transaction mined successfully.")
+
+    def contract_created_signal_cb(self, addr: Address):
+        if addr != b'':
+            self.current_contract.set_address(addr.hex())
+            a = self.current_contract.get_readable_address()
+            self.relevant_addresses[a] = self.current_contract
+            self._refresh_statusbar("Mined new Contract at address " + a)
+            if self.ui.select_address_combobox.currentText() == "Load a contract first!":
+                self.ui.select_address_combobox.clear()
+                self.ui.select_address_combobox.currentIndexChanged.connect(self.contract_selected)
+            cb: QComboBox = self.ui.select_address_combobox
+            cb.addItem(a)
+            cb.setCurrentIndex(cb.count() - 1)
+        else:
+            self._refresh_statusbar("Error processing transaction.")
+        self.post_transaction_handling()
+
+    def transaction_aborted_signal_cb(self):
+        self.transaction_sent_cb()
+        self._clear_table_widget(TableWidgetEnum.MEMORY)
+        self._clear_table_widget(TableWidgetEnum.STACK)
+        self._refresh_statusbar("Transaction aborted")
+        MyComputation.abort = False
+
+    def show_result_signal_cb(self, result: bytes):
+        if result != b'':
+            d = QDialog()
+            d.setBaseSize(300, 300)
+            te = QPlainTextEdit(d)
+            te.setFixedSize(290, 270)
+            te.setPlainText(encode_hex(result))
+            b1 = QPushButton("OK", d)
+            b1.clicked.connect(d.close)
+            b1.move(250, 270)
+            d.setWindowTitle("Return Value")
+            d.setWindowModality(Qt.ApplicationModal)
+            d.exec_()
+
+    def add_change_chain_signal_cb(self, chain: ChangeChain):
         self.change_chains.append(chain)
 
-    def pre_computation(self, remaining_gas: int, pc: int):
+    def pre_computation_signal_cb(self, remaining_gas: int, pc: int):
         # pc and gasleft
         self.ui.gas_label.setText("Gas: " + str(remaining_gas))
         self.ui.pc_label.setText("PC: " + str(pc))
@@ -480,17 +483,17 @@ class ApplicationWindow(QMainWindow):
         last_elem = len(self.change_chains) - 1
         if last_elem > 0:
             # remove previous post highlighting
-            self.highlight_from_chain(self.change_chains[last_elem - 1], False, False)
+            self._highlight_from_chain(self.change_chains[last_elem - 1], False, False)
         if last_elem >= 0:
-            self.highlight_from_chain(self.change_chains[last_elem], True, True)
+            self._highlight_from_chain(self.change_chains[last_elem], True, True)
         self.step_lock.release()
 
-    def post_computation(self, stack: [tuple], memory: bytearray, pc: int, last_gas: int):
+    def post_computation_signal_cb(self, stack: [tuple], memory: bytearray, pc: int, last_gas: int):
         logger.info("Entering post compute in main")
         # remove current pre highlighting
         last_elem = len(self.change_chains) - 1
         if last_elem >= 0:
-            self.highlight_from_chain(self.change_chains[last_elem], True, False)
+            self._highlight_from_chain(self.change_chains[last_elem], True, False)
 
         # for some opcodes it would be very hard to calculate the gas usage in advance (e.g. SSTORE, might be write
         # for 20k or just for 15k or you might even get a refund) so we fill in those gas prices once the information
@@ -531,81 +534,15 @@ class ApplicationWindow(QMainWindow):
 
         # highlighting
         if last_elem >= 0:
-            self.highlight_from_chain(self.change_chains[last_elem], False, True)
+            self._highlight_from_chain(self.change_chains[last_elem], False, True)
 
         # scroll to correct place
         v2 = self.ui.opcodes_table_widget.item(pc, 2)
         self.ui.opcodes_table_widget.scrollToItem(v2)
         self.step_lock.release()
 
-    def highlight_from_chain(self, c: ChangeChain, pre_computation: bool, set_properties: bool):
-        # highlighting
-        for link in c:
-            logger.info("Now doing widget {w}".format(w=link.widget))
-            link: ChangeChainLink = link
-            widget: QTableWidget = self.table_lookup[link.widget]
-            if pre_computation:
-                comp = link.pre_computation
-            else:
-                comp = link.post_computation
-            for index in comp:
-                for i in range(0, widget.columnCount()):
-                    item: QTableWidgetItem = widget.item(index, i)
-                    if item is None:
-                        logger.info("Skipping item {ind}, {i} because it is None".format(ind=index, i=i))
-                        continue
-                    if set_properties:
-                        font: QFont = QFont()
-                        font.setBold(True)
-                        if pre_computation:
-                            col = QColor(255, 0, 0)
-                        else:
-                            col = QColor(0, 255, 0)
-                        item.setFont(font)
-                        item.setForeground(QBrush(col))
-                    else:  # reset
-                        it: QTableWidgetItem = QTableWidgetItem()
-                        it.setText(item.text())
-                        if link.widget == TableWidgetEnum.OPCODES and i == 2 \
-                                or link.widget == TableWidgetEnum.STORAGE and i == 1:
-                            it.setTextAlignment(130)
-                        widget.setItem(index, i, it)
-
-        #  Put a lock around this and process only one step at a time. MyComputation must wait until the
-        #  produced is consumed
-        qApp.processEvents()
-
-    def set_storage(self, addr: Address, slot: str = "", value: str = ""):
-        lkp = self.storage_lookup.get(addr)
-        if lkp is None:
-            self.storage_lookup[addr] = {}
-
-        c = self.storage_lookup.get(addr).get(slot)
-        if c is None:
-            self.storage_lookup[addr][slot] = len(self.storage_lookup.get(addr))
-
-        # if we are handling a contract address that is currently being displayed OR if we are in the process of
-        # creating a new contract
-        if self.ui.debug_checkbox.checkState() or self.current_contract.get_typed_address() == b'':
-            if c is None:
-                c = self.storage_lookup.get(addr).get(slot)
-                self.ui.storage_table_widget.insertRow(c)
-                s = QTableWidgetItem()
-                v = QTableWidgetItem()
-                s.setText(slot)
-                v.setText(value)
-                v.setTextAlignment(130)
-                self.ui.storage_table_widget.setItem(c, 0, s)
-                self.ui.storage_table_widget.setItem(c, 1, v)
-            else:
-                v = self.ui.storage_table_widget.item(c, 1)
-                v.setText(value)
-
-            self.ui.storage_table_widget.scrollToItem(v)
-            if self.ui.debug_checkbox.checkState() and not self.setting_storage:
-                self.storage_lock.release()
-
-    def init_debug_session(self, code: CodeStreamAPI, opcode_lookup: Dict[int, OpcodeAPI], message: MessageAPI):
+    def init_debug_session_signal_cb(self, code: CodeStreamAPI, opcode_lookup: Dict[int, OpcodeAPI],
+                                     message: MessageAPI):
         """
         :param code: Must be a deepcopy() version of the real code object.
         :param opcode_lookup:
@@ -665,7 +602,7 @@ class ApplicationWindow(QMainWindow):
 
         # I think the processEvents function does also process signals in the background. This isn't really documented
         # anywhere besides at some places in the docs where signals are also called events. The reason why I am
-        # thinking that is that when this line is reached, the pre_computation callback is called immediately
+        # thinking that is that when this line is reached, the pre_computation_cb callback is called immediately
         # afterwards, which should not be and is only the case if there already is a signal in the queue waiting to be
         # handled and the processEvents function handles all the signals before updating the gui (which
         # is what we actually want).
@@ -677,39 +614,79 @@ class ApplicationWindow(QMainWindow):
         qApp.processEvents()
         self.init_lock.release()
 
-    def post_transaction_handling(self):
-        """
-        Post transaction processes.
-        """
-        self.refresh_relevant_addresses_table_widget()
-        self._refresh_storage(Address(decode_hex(self.ui.select_address_combobox.currentText()[2:])))
-        self.ui.debug_checkbox.setDisabled(False)
-        self.ui.automode_checkbox.setDisabled(False)
-        self.ui.send_transaction_button.setDisabled(False)
-        self.ui.step_duration_label.setDisabled(False)
-        self.ui.step_duration_le.setDisabled(False)
-        self.ui.abort_automode_button.hide()
-
-    def pre_transaction_handling(self):
-        """
-        Prepares the UI and other objects for a transaction.
-        """
-        self.ui.debug_checkbox.setDisabled(True)
-        self.ui.automode_checkbox.setDisabled(True)
-        self.ui.send_transaction_button.setDisabled(True)
-        self.ui.step_duration_le.setDisabled(True)
-        self.ui.step_duration_label.setDisabled(True)
-        if self.ui.automode_checkbox.checkState():
-            self.ui.abort_automode_button.show()
-        self.change_chains: [ChangeChain] = []
-        self.step_semaphore = QSemaphore(1)
-
     def error_signal_cb(self, reason: str):
         """
         Callback function for the error signal.
         """
-        self.refresh_statusbar(reason)
+        self._refresh_statusbar(reason)
         self.post_transaction_handling()
+
+    def set_storage_signal_cb(self, addr: Address, slot: str = "", value: str = ""):
+        lkp = self.storage_lookup.get(addr)
+        if lkp is None:
+            self.storage_lookup[addr] = {}
+
+        c = self.storage_lookup.get(addr).get(slot)
+        if c is None:
+            self.storage_lookup[addr][slot] = len(self.storage_lookup.get(addr))
+
+        # if we are handling a contract address that is currently being displayed OR if we are in the process of
+        # creating a new contract
+        if self.ui.debug_checkbox.checkState() or self.current_contract.get_typed_address() == b'':
+            if c is None:
+                c = self.storage_lookup.get(addr).get(slot)
+                self.ui.storage_table_widget.insertRow(c)
+                s = QTableWidgetItem()
+                v = QTableWidgetItem()
+                s.setText(slot)
+                v.setText(value)
+                v.setTextAlignment(130)
+                self.ui.storage_table_widget.setItem(c, 0, s)
+                self.ui.storage_table_widget.setItem(c, 1, v)
+            else:
+                v = self.ui.storage_table_widget.item(c, 1)
+                v.setText(value)
+
+            self.ui.storage_table_widget.scrollToItem(v)
+            if self.ui.debug_checkbox.checkState() and not self.setting_storage:
+                self.storage_lock.release()
+
+    def _highlight_from_chain(self, c: ChangeChain, pre_computation: bool, set_properties: bool):
+        # highlighting
+        for link in c:
+            logger.info("Now doing widget {w}".format(w=link.widget))
+            link: ChangeChainLink = link
+            widget: QTableWidget = self.table_lookup[link.widget]
+            if pre_computation:
+                comp = link.pre_computation
+            else:
+                comp = link.post_computation
+            for index in comp:
+                for i in range(0, widget.columnCount()):
+                    item: QTableWidgetItem = widget.item(index, i)
+                    if item is None:
+                        logger.info("Skipping item {ind}, {i} because it is None".format(ind=index, i=i))
+                        continue
+                    if set_properties:
+                        font: QFont = QFont()
+                        font.setBold(True)
+                        if pre_computation:
+                            col = QColor(255, 0, 0)
+                        else:
+                            col = QColor(0, 255, 0)
+                        item.setFont(font)
+                        item.setForeground(QBrush(col))
+                    else:  # reset
+                        it: QTableWidgetItem = QTableWidgetItem()
+                        it.setText(item.text())
+                        if link.widget == TableWidgetEnum.OPCODES and i == 2 \
+                                or link.widget == TableWidgetEnum.STORAGE and i == 1:
+                            it.setTextAlignment(130)
+                        widget.setItem(index, i, it)
+
+        #  Put a lock around this and process only one step at a time. MyComputation must wait until the
+        #  produced is consumed
+        qApp.processEvents()
 
     def _refresh_storage(self, addr: Address):
         """
@@ -734,6 +711,30 @@ class ApplicationWindow(QMainWindow):
                 self.ui.storage_table_widget.setItem(lkp.get(slot), 0, k)
                 self.ui.storage_table_widget.setItem(lkp.get(slot), 1, v)
 
+    def _refresh_statusbar(self, status: str = ""):
+        self.blockLabel.setText("Current Block: " + str(self.evm_handler.get_block_number())
+                                + " | Gas Price: " + str(self.evm_handler.get_gas_price()) + " wei"
+                                + " | Current Gas Limit: " + str(self.evm_handler.get_gas_limit()))
+        self.statusLabel.setText("  " + status)
+
+    def _refresh_relevant_addresses(self):
+        """ should refresh all balances at least... """
+        self._clear_table_widget(TableWidgetEnum.ADDRESSES)
+        for addr in self.relevant_addresses.values():
+            c = self.ui.used_addresses_table_widget.rowCount()
+            self.ui.used_addresses_table_widget.insertRow(c)
+            a = QTableWidgetItem()
+            a.setText(addr.get_readable_address())
+            b = QTableWidgetItem()
+            bal = self.evm_handler.get_balance(addr.get_typed_address())
+            b.setText(str(bal) + " wei")
+            b.setTextAlignment(130)
+            t = QTableWidgetItem()
+            t.setText("Account" if self.evm_handler.get_code(addr.get_typed_address()) == b'' else "Contract")
+            self.ui.used_addresses_table_widget.setItem(c, 0, a)
+            self.ui.used_addresses_table_widget.setItem(c, 1, b)
+            self.ui.used_addresses_table_widget.setItem(c, 2, t)
+
     def _clear_table_widget(self, enum: TableWidgetEnum):
         """
         Helper function that clears a table widget.
@@ -746,15 +747,15 @@ class ApplicationWindow(QMainWindow):
         """
         Helper function that connects a workers signals to the callback functions and starts the worker.
         """
-        worker.signals.init_debug_session.connect(self.init_debug_session)
-        worker.signals.post_computation.connect(self.post_computation)
-        worker.signals.pre_computation.connect(self.pre_computation)
-        worker.signals.set_storage.connect(self.set_storage)
-        worker.signals.add_chain.connect(self.set_change_chain)
-        worker.signals.contract_created.connect(self.contract_created)
-        worker.signals.transaction_sent.connect(self.transaction_sent)
-        worker.signals.abort_transaction.connect(self.transaction_aborted)
-        worker.signals.result.connect(self.result)
+        worker.signals.init_debug_session.connect(self.init_debug_session_signal_cb)
+        worker.signals.post_computation.connect(self.post_computation_signal_cb)
+        worker.signals.pre_computation.connect(self.pre_computation_signal_cb)
+        worker.signals.set_storage.connect(self.set_storage_signal_cb)
+        worker.signals.add_chain.connect(self.add_change_chain_signal_cb)
+        worker.signals.contract_created.connect(self.contract_created_signal_cb)
+        worker.signals.transaction_sent.connect(self.transaction_sent_signal_cb)
+        worker.signals.abort.connect(self.transaction_aborted_signal_cb)
+        worker.signals.result.connect(self.show_result_signal_cb)
         worker.signals.error.connect(self.error_signal_cb)
         self.thread_pool.start(worker)
 
@@ -774,7 +775,7 @@ class ApplicationWindow(QMainWindow):
                     evmhandler.DEFAULT_GAS_PRICE = val
                 else:
                     evmhandler.DEFAULT_TRANSACTION_GAS_AMOUNT = val
-                self.refresh_statusbar()
+                self._refresh_statusbar()
 
     def _parse_string(self, val: str, conversion_fn: FunctionType, constraints: [(FunctionType, [])]) -> Any:
         """
@@ -797,10 +798,10 @@ class ApplicationWindow(QMainWindow):
                 fn = constraint[0]
                 args = [res] + constraint[1]
                 if not fn(*args):
-                    self.refresh_statusbar(val + " does not fulfill one or more constraints")
+                    self._refresh_statusbar(val + " does not fulfill one or more constraints")
                     return None
         except ValueError as e:
-            self.refresh_statusbar(str(e))
+            self._refresh_statusbar(str(e))
             return None
         return res
 

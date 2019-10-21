@@ -23,7 +23,9 @@ classes and overriding relevant functions was possible without much effort.
 This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
 
 ## Quickstart
-Here are some OS specific instructions on how to setup further necessary packages as well as the virtual environment:
+Here are some platform specific instructions on how to setup further necessary packages as well as the virtual 
+environment:
+
 #### macOS
 ```shell script
 # using homebrew:
@@ -57,17 +59,15 @@ python app/main.py
 
     
 ## Usage
-
-![Screenshot of EVM-Simulator](docs/screenshot.png?raw=true "EVM-Simulator on macOS")
+![Screenshot of EVM-Simulator](docs/screenshot_macos.png?raw=true "EVM-Simulator on macOS")
 
 The above image shows what the program looks like while debugging a transaction. As you can see, most of the relevant 
 information about the execution environment as well as the world state is represented in real-time.
 
-If you are new to the world of smart contracts, and want to learn more about some of the terminology used,  you can head
-over to the [Basics Section](docs/basics.md).
+If you are new to the world of smart contracts, and want to learn more about some of the terminology used, you might 
+want to head over to the [Basics Section](docs/basics.md) first.
 
 ### Loading a contract
-
 The first thing to do when using EVM-Simulator is to load a contract. Currently, there are two different ways to do so. 
 You can either:
 - Load a contract with known ABI and Constructor bytecode or
@@ -87,7 +87,6 @@ Regardless of which method you use to load a contract, you will always have the 
 alongside a transaction.
 
 ### Sending a Transaction
-
 If you have loaded a contract and filled in the parameters or the raw data field, the next thing to do (before clicking 
 send transaction) is to specify the debug mode. There are two options:
 - If you are in debug mode only, you will need to click through a transactions' execution steps one by one. However you 

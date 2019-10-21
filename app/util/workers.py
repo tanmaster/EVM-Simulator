@@ -45,7 +45,7 @@ class WorkerSignals(QObject):
     set_storage = pyqtSignal(bytes, str, str)
     contract_created = pyqtSignal(bytes)
     transaction_sent = pyqtSignal()
-    abort_transaction = pyqtSignal()
+    abort = pyqtSignal()
     error = pyqtSignal(str)
     result = pyqtSignal(object)
 
@@ -85,7 +85,7 @@ class BaseWorker(QRunnable):
         self.kwargs['set_storage'] = self.signals.set_storage
         self.kwargs['contract_created'] = self.signals.contract_created
         self.kwargs['transaction_sent'] = self.signals.transaction_sent
-        self.kwargs['abort_transaction'] = self.signals.abort_transaction
+        self.kwargs['abort'] = self.signals.abort
         self.kwargs['error'] = self.signals.error
         self.kwargs['result'] = self.signals.result
 

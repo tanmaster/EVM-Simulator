@@ -58,7 +58,7 @@ class MyComputation(IstanbulComputation):
         cls.set_storage = cls.kwargs.get("set_storage")
         cls.init_debug_session = cls.kwargs.get("init_debug_session")
         cls.init_lock: Lock = cls.kwargs.get("init_lock")
-        cls.abort_transaction = cls.kwargs.get("abort_transaction")
+        cls.abort_transaction = cls.kwargs.get("abort")
         cls.step_duration = cls.kwargs.get("step_duration")
         cls.storage_lock: Lock = cls.kwargs.get("storage_lock")
         cls.step_semaphore: QSemaphore = cls.kwargs.get("step_semaphore")

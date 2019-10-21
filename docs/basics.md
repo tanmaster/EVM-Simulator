@@ -38,6 +38,8 @@ another transaction.
 ### To
 The target address of a transaction. When using EVM-Simulator, and this address is being shown as 0x0, it means that the 
 currently shown transaction is in the process of creating a contract.
+### Value
+The amount of wei that a transaction holds.
 ### Data
 The data field needs to be specified e.g. when you want to call a contracts' function.
 ### Call depth
@@ -50,8 +52,8 @@ Specifies how much gas to send alongside a transaction.
 ### Program Counter
 The program counter shows how far the execution of a transaction is. It points to the bytecode instruction
 of a contracts' code that is currently being executed. 
-## EVM-Simulator Interface
-![Screenshot of EVM-Simulator](screenshot.png?raw=true "EVM-Simulator on macOS")
+## EVM-Simulator GUI
+![Screenshot of EVM-Simulator](screenshot_ubuntu.png?raw=true "EVM-Simulator on Ubuntu")
 ### Opcodes Table
 Shows the contracts' entire code, alongside the mnemonic name and gas cost estimate inside a table. 
 ### Stack Table
