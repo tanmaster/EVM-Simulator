@@ -25,7 +25,7 @@ which slot is defined by the order of occurrence in the contracts' source code. 
 using 256-bit sized data, it gets more complex when using smaller sized data (e.g. it's possible to store two 128-bit values
 under one slot to save storage), mappings, arrays, or strings.
 
-## Transaction, Messages
+## Transactions and Messages
 A transaction isn't just a transaction in the financial sense, but in logical way, which means that either the 
 transaction is executed and the resulting state is stored entirely, or the changes are dismissed.
 Each transaction comes with the following attributes:
@@ -58,11 +58,11 @@ Shows the contracts' entire code, alongside the mnemonic name and gas cost estim
 Shows the stack of the current execution context. Since the EVM is a stack machine, and most opcodes interact with the 
 stack in a certain way, the relevant stuff is most likely to happen here.
 ### Memory Table
-Shows the memory of the current execution context. The memory is a separate area in which a contract can store data,
- however the memory's content is not persisted.
+Shows the memory of the current execution context. The memory is a separate area in which a contract can read and write 
+data during a transactions' execution data, however the memory's content is not persisted.
 ### Storage Table
-The storage of the currently shown contract. Note that storage slots are only watched at after their first occurrence in
-a computation. Until every slots' value is assumed to be zero.
+The storage of the currently shown contract. Note that storage slots are only watched at (and shown in the table) after 
+their first occurrence in a computation. Until that point every slots' value is assumed to be zero.
 ### Used Addresses Table
 Shows the currently used addresses and whether they're an account or a contract.
 

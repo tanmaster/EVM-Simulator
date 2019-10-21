@@ -66,6 +66,7 @@ information about the execution environment as well as the world state is repres
 If you are new to the world of smart contracts, and want to learn more about some of the terminology used,  you can head
 over to the [Basics Section](docs/basics.md).
 
+### Loading a contract
 
 The first thing to do when using EVM-Simulator is to load a contract. Currently, there are two different ways to do so. 
 You can either:
@@ -84,6 +85,19 @@ having to create the input data yourself.
 
 Regardless of which method you use to load a contract, you will always have the option to send arbitrary raw data 
 alongside a transaction.
+
+### Sending a Transaction
+
+If you have loaded a contract and filled in the parameters or the raw data field, the next thing to do (before clicking 
+send transaction) is to specify the debug mode. There are two options:
+- If you are in debug mode only, you will need to click through a transactions' execution steps one by one. However you 
+can also specify the amount of steps to do at once. 
+- If you do not feel like stepping through the execution manually (by clicking on step), you can also tick the
+Auto Mode checkbox. For this you can also specify a stepping duration, a timespan for which the program will pause 
+in between each step.
+
+Either way, you can always abort a transactions' execution (the storage changes made thus far will stay) if you made a 
+mistake or don't want to sit through the execution.
 
 #### Notes on Input Format
 I tried to validate the input wherever I could, however there could still be some possibility that the program crashes
