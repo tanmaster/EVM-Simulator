@@ -51,6 +51,7 @@ class ApplicationWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.blockLabel)
         self.statusBar().addWidget(self.statusLabel)
         self._refresh_statusbar()
+        self.ui.select_address_combobox.currentIndexChanged.connect(self.contract_selected)
         self.ui.select_function_combobox.currentIndexChanged.connect(self.contract_function_selected)
         self.ui.send_transaction_button.clicked.connect(self.send_transaction_clicked)
         self.ui.select_function_combobox.hide()
@@ -318,7 +319,8 @@ class ApplicationWindow(QMainWindow):
                     assert tx.val >= 0
                     self.evm_handler.set_balance(Address(to), tx.val)
                     to = tx.addr.get_readable_address()
-                    self.relevant_addresses[to] = tx.addr
+                    if self.relevant_addresses[to] is None:
+                        self.relevant_addresses[to] = tx.addr
                     self._refresh_relevant_addresses()
                 except (ValidationError, AssertionError, ValueError) as e:
                     st = "Could not set at least one balance"
@@ -415,6 +417,8 @@ class ApplicationWindow(QMainWindow):
         self.ui.send_transaction_button.setDisabled(False)
         self.ui.step_duration_label.setDisabled(False)
         self.ui.step_duration_le.setDisabled(False)
+        self.ui.select_address_combobox.setDisabled(False)
+        self.ui.select_function_combobox.setDisabled(False)
         self.ui.abort_automode_button.hide()
 
     def pre_transaction_handling(self):
@@ -426,6 +430,8 @@ class ApplicationWindow(QMainWindow):
         self.ui.send_transaction_button.setDisabled(True)
         self.ui.step_duration_le.setDisabled(True)
         self.ui.step_duration_label.setDisabled(True)
+        self.ui.select_address_combobox.setDisabled(True)
+        self.ui.select_function_combobox.setDisabled(True)
         if self.ui.automode_checkbox.checkState():
             self.ui.abort_automode_button.show()
         self.change_chains: [ChangeChain] = []
@@ -436,23 +442,26 @@ class ApplicationWindow(QMainWindow):
         self._refresh_statusbar("Transaction mined successfully.")
 
     def contract_created_signal_cb(self, addr: Address):
+        cb: QComboBox = self.ui.select_address_combobox
         if addr != b'':
             self.current_contract.set_address(addr.hex())
             a = self.current_contract.get_readable_address()
             self.relevant_addresses[a] = self.current_contract
             self._refresh_statusbar("Mined new Contract at address " + a)
-            if self.ui.select_address_combobox.currentText() == "Load a contract first!":
-                self.ui.select_address_combobox.clear()
-                self.ui.select_address_combobox.currentIndexChanged.connect(self.contract_selected)
-            cb: QComboBox = self.ui.select_address_combobox
-            cb.addItem(a)
+            cb.currentIndexChanged.disconnect()
+            cb.clear()
+            for addr in self.relevant_addresses.values():
+                if self.evm_handler.get_code(addr.get_typed_address()) != b'':
+                    cb.addItem(addr.get_readable_address())
+            cb.currentIndexChanged.connect(self.contract_selected)
             cb.setCurrentIndex(cb.count() - 1)
+            if cb.count() == 1: self.contract_selected()
         else:
             self._refresh_statusbar("Error processing transaction.")
         self.post_transaction_handling()
 
     def transaction_aborted_signal_cb(self):
-        self.transaction_sent_cb()
+        self.transaction_sent_signal_cb()
         self._clear_table_widget(TableWidgetEnum.MEMORY)
         self._clear_table_widget(TableWidgetEnum.STACK)
         self._refresh_statusbar("Transaction aborted")
@@ -688,12 +697,12 @@ class ApplicationWindow(QMainWindow):
         #  produced is consumed
         qApp.processEvents()
 
-    def _refresh_storage(self, addr: Address):
+    def _refresh_storage(self, addr: Address = None):
         """
         Helper function that refreshes the displayed storage table widget with values for the specified address.
         """
         self._clear_table_widget(TableWidgetEnum.STORAGE)
-
+        if addr is None: return
         self.ui.storage_address_label.setText("Address: 0x" + addr.hex())
         self.ui.storage_address_label.setToolTip("Showing storage for address: 0x" + addr.hex())
         lkp = self.storage_lookup.get(addr)
@@ -720,7 +729,16 @@ class ApplicationWindow(QMainWindow):
     def _refresh_relevant_addresses(self):
         """ should refresh all balances at least... """
         self._clear_table_widget(TableWidgetEnum.ADDRESSES)
-        for addr in self.relevant_addresses.values():
+        cb: QComboBox = self.ui.select_address_combobox
+        for key, addr in self.relevant_addresses.items():
+            if type(addr) == MyContract and self.evm_handler.get_code(addr.get_typed_address()) == b'':
+                for i in range(0, len(cb)):
+                    if cb.itemText(i) == addr.get_readable_address():
+                        cb.removeItem(i)
+                        break
+                if self.storage_lookup.get(addr.get_readable_address()) is not None:
+                    self.storage_lookup.pop(addr.get_readable_address())
+                    self._refresh_storage()
             c = self.ui.used_addresses_table_widget.rowCount()
             self.ui.used_addresses_table_widget.insertRow(c)
             a = QTableWidgetItem()
