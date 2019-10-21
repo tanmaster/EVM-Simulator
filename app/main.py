@@ -450,7 +450,7 @@ class ApplicationWindow(QMainWindow):
                     logger.info("Add tx to addr {a} with value {v} in unit {u}".format(a=addr, v=val, u=unit))
             st = ""
             for tx in txs:
-                st = "Transactions mined successfully"
+                st = "Set balances successfully"
                 try:
                     to = tx.addr.get_typed_address()
                     validate_canonical_address(to)
@@ -460,7 +460,7 @@ class ApplicationWindow(QMainWindow):
                     self.relevant_addresses[to] = tx.addr
                     self.refresh_relevant_addresses_table_widget()
                 except (ValidationError, AssertionError, ValueError) as e:
-                    st = "At least one transaction failed"
+                    st = "Could not set at least one balance"
             self.refresh_statusbar(st)
 
     def refresh_statusbar(self, status: str = ""):

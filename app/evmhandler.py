@@ -293,14 +293,24 @@ class EVMHandler:
         self.vm.get_state_class().computation_class = MyComputation
 
     def get_random_address(self) -> Address:
+        """
+        :return: A random address. Initial seed is the timestamp of initialization of the instance. Not really
+        cryptographically secure but enough for our use case.
+        """
         addr = Address(decode_hex(self.seed[:40]))
         self.seed = keccak_256(self.seed.encode("utf-8")).hexdigest()
         return addr
 
     @staticmethod
     def get_gas_price() -> int:
+        """
+        :return: Current gas price.
+        """
         return DEFAULT_GAS_PRICE
 
     @staticmethod
     def get_gas_limit() -> int:
+        """
+        :return: Current gas limit.
+        """
         return DEFAULT_TRANSACTION_GAS_AMOUNT

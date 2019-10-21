@@ -17,7 +17,7 @@ on top of [py-evm](https://github.com/ethereum/py-evm), a well-known and widespr
 which is basically used to simulate an Ethereum Blockchain. 
 
 In order to be able to read out the state variables and the world state during the execution time of a contract, it was
-necessary to swap out some of the modules that are used by py-evm. Thanks to the modularity of it, injecting custom 
+necessary to swap out some of the modules that are used by py-evm, but thanks to its modularity, injecting custom 
 classes and overriding relevant functions was possible without much effort. 
 
 This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
@@ -49,7 +49,7 @@ virtualenv -p python3 venv
 . venv/bin/activate
 
 # install dependencies
-pip3 install -e .[dev]
+pip3 install -e .
 
 # run the application
 python app/main.py
@@ -58,10 +58,14 @@ python app/main.py
     
 ## Usage
 
-![Screenshot of EVM-Simulator](screenshot.png?raw=true "EVM-Simulator on macOS")
+![Screenshot of EVM-Simulator](docs/screenshot.png?raw=true "EVM-Simulator on macOS")
 
-The above image shows what the program looks like while debugging a transaction. As you can see, the most relevant 
+The above image shows what the program looks like while debugging a transaction. As you can see, most of the relevant 
 information about the execution environment as well as the world state is represented in real-time.
+
+If you are new to the world of smart contracts, and want to learn more about some of the terminology used,  you can head
+over to the [Basics Section](docs/basics.md).
+
 
 The first thing to do when using EVM-Simulator is to load a contract. Currently, there are two different ways to do so. 
 You can either:
@@ -73,18 +77,19 @@ Note that when using the latter option, you will lose the ability to select a co
 have to enter the raw input data, which you will have to compute yourself. Please see the bottom of this page for more 
 resources on this matter.
 
-Using the first option, you might notice that the expected format is exactly the same as the output formats you would get
-if you'd compile a contract in [Remix](http://remix.ethereum.org). If you load a contract like this, you get the 
-possibility be able to select which function you want to call alongside its parameters.
+Using the first option, you might notice that the expected input formats of ABI and bytecode are exactly the same as the 
+output formats you would get if you'd compile a contract in [Remix](http://remix.ethereum.org). If you load a contract 
+this way, you gain the ability to select a function you want to call alongside its parameters, instead of painstakingly
+having to create the input data yourself.
 
-Regardless of which method to use to load a contract, you will always have the possibility to send arbitrary raw data 
+Regardless of which method you use to load a contract, you will always have the option to send arbitrary raw data 
 alongside a transaction.
 
 #### Notes on Input Format
 I tried to validate the input wherever I could, however there could still be some possibility that the program crashes
 on unexpected input. To prevent this, please refrain from providing data that is likely to be unexpected by the program.
 The placeholder texts usually give away which format is expected in most input fields. Concerning function input 
-arguments, JSON-like notation is expected:
+arguments, JSON-like notation is safe to use:
 - Numeric values can be entered as is e.g: 1
 - Strings should be enclosed by double quotation marks e.g.: "This is a string!"
 - Arrays should be enclosed by square brackets: [0, 1, 2, 3]
@@ -101,6 +106,8 @@ world state. However this shouldn't be an issue since a) the user imposes the ch
 we do not have to deal with non-trusted parties c) there is no real monetary value behind in the underlying chain.
 - When using different call opcodes, storage might display old values sometimes until the transaction is finished.
 - Getting refunds from freeing used storage is currently not displayed correctly.
+- For specific opcodes (e.g. SSTORE), the gas cost might be shown incorrectly (most likely as zero) until after its 
+execution.
 
 #### Used Dependencies
     "eth-utils>=1,<2",
@@ -115,3 +122,4 @@ we do not have to deal with non-trusted parties c) there is no real monetary val
 - [Keccak-256 online hash function](https://emn178.github.io/online-tools/keccak_256.html)
 - [Ethereum Virtual Machine Opcodes](https://ethervm.io/)
 - [Online Solidity Decompiler](https://ethervm.io/decompile)
+- [Building an app that uses Py-EVM](https://py-evm.readthedocs.io/en/latest/guides/building_an_app_that_uses_pyevm.html)
