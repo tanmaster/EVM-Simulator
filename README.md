@@ -7,7 +7,7 @@ time.
 
 The current landscape of Smart Contract development is one that does not truly enable developers to debug transactions 
 during execution, and aside from [Remix](http://remix.ethereum.org), there is no mainstream debugging tool 
-available. While the Remix debugger does it's job well, it does not provide means to debug contracts of which the source
+available. While the Remix debugger does its job well, it does not provide means to debug contracts of which the source
 code is unknown, and furthermore, it also isn't possible to debug transactions while they're being processed, but only
 after they have been mined. 
 
@@ -42,6 +42,7 @@ sudo apt-get install python3-pip
 sudo apt-get install virtualenv
 ```
 
+Afterwards you can install EVM-Simulator on either platform by following these steps:
 #### Installing and Running EVM-Simulator
 ```shell script
 git clone https://github.com/tanmaster/EVM-Simulator.git
@@ -52,6 +53,9 @@ virtualenv -p python3 venv
 
 # install dependencies
 pip3 install -e .
+
+# you can run the tests
+pytest tests/
 
 # run the application
 python app/main.py
@@ -89,13 +93,13 @@ alongside a transaction.
 ### Sending a Transaction
 If you have loaded a contract and filled in the parameters or the raw data field, the next thing to do (before clicking 
 send transaction) is to specify the debug mode. There are two options:
-- If you are in debug mode only, you will need to click through a transactions' execution steps one by one. However you 
+- If you are in debug mode only, you will need to click through a transaction's execution steps one by one. However you 
 can also specify the amount of steps to do at once. 
 - If you do not feel like stepping through the execution manually (by clicking on step), you can also tick the
 Auto Mode checkbox. For this you can also specify a stepping duration, a timespan for which the program will pause 
 in between each step.
 
-Either way, you can always abort a transactions' execution (the storage changes made thus far will stay) if you made a 
+Either way, you can always abort a transaction's execution (the storage changes made thus far will stay) if you made a 
 mistake or don't want to sit through the execution.
 
 #### Notes on Input Format

@@ -21,7 +21,7 @@ expensive than other operations, mostly because in a real world block chain appl
 on every node, and thus comes with permanent costs for each miner. 
 
 The storage is segmented into slots and values. When using solidity, the order of which variable is stored under in 
-which slot is defined by the order of occurrence in the contracts' source code. While this is straight forward when 
+which slot is defined by the order of occurrence in the contract's source code. While this is straight forward when 
 using 256-bit sized data, it gets more complex when using smaller sized data (e.g. it's possible to store two 128-bit values
 under one slot to save storage), mappings, arrays, or strings.
 
@@ -41,7 +41,7 @@ currently shown transaction is in the process of creating a contract.
 ### Value
 The amount of wei that a transaction holds.
 ### Data
-The data field needs to be specified e.g. when you want to call a contracts' function.
+The data field needs to be specified e.g. when you want to call a contract's function.
 ### Call depth
 This property shows the depth of the current call. Whenever a contract makes further calls internally, this value gets 
 incremented by one. 
@@ -51,20 +51,20 @@ Specifies the price for 1 gas in wei.
 Specifies how much gas to send alongside a transaction. 
 ### Program Counter
 The program counter shows how far the execution of a transaction is. It points to the bytecode instruction
-of a contracts' code that is currently being executed. 
+of a contract's code that is currently being executed. 
 ## EVM-Simulator GUI
 ![Screenshot of EVM-Simulator](screenshot_ubuntu.png?raw=true "EVM-Simulator on Ubuntu")
 ### Opcodes Table
-Shows the contracts' entire code, alongside the mnemonic name and gas cost estimate inside a table. 
+Shows the contract's entire code, alongside the mnemonic name and gas cost estimate inside a table. 
 ### Stack Table
 Shows the stack of the current execution context. Since the EVM is a stack machine, and most opcodes interact with the 
 stack in a certain way, the relevant stuff is most likely to happen here.
 ### Memory Table
 Shows the memory of the current execution context. The memory is a separate area in which a contract can read and write 
-data during a transactions' execution data, however the memory's content is not persisted.
+data during a transaction's execution data, however the memory's content is not persisted.
 ### Storage Table
 The storage of the currently shown contract. Note that storage slots are only watched at (and shown in the table) after 
-their first occurrence in a computation. Until that point every slots' value is assumed to be zero.
+their first occurrence in a computation. Until that point every slot's value is assumed to be zero.
 ### Used Addresses Table
 Shows the currently used addresses and whether they're an account or a contract.
 

@@ -185,7 +185,7 @@ class TestContracts(TestCase):
 
 
 def get_contract(filename: str) -> MyContract:
-    targetDir = os.path.dirname(os.path.realpath(__file__)) + "/../test_contracts/output/"
+    targetDir = os.path.dirname(os.path.realpath(__file__)) + "/../solidity_contracts/output/"
     with open(targetDir + filename + ".abi", 'r') as openfile:
         _abi = openfile.read()
     with open(targetDir + filename + ".bin", 'r') as openfile:
