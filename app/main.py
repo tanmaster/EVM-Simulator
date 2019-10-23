@@ -338,11 +338,16 @@ class ApplicationWindow(QMainWindow):
         AddContractDialog.setFixedSize(AddContractDialog.size())
         AddContractDialog.show()
         if AddContractDialog.exec_() == QDialog.Accepted:
-            if ui.tabWidget.currentIndex() == 0:
-                try:
+            try:
+                if ui.tabWidget.currentIndex() == 0:
                     self.pre_transaction_handling()
                     step_duration = float(self.ui.step_duration_le.text())
-                    self.current_contract = MyContract(ui.abi_te.toPlainText(), ui.bytecode_te_2.toPlainText())
+                    abi = ui.abi_te.toPlainText()
+                    abi = "[]" if abi == "" else abi
+                    byte_code = ui.bytecode_te_2.toPlainText()
+                    if byte_code == "":
+                        raise ValueError("Please enter a valid contract.")
+                    self.current_contract = MyContract(abi, byte_code)
                     self._clear_table_widget(TableWidgetEnum.STORAGE)
                     qApp.processEvents()
                     wei = self._parse_string(self.ui.value_le.text(), int, [(operator.ge, [0])])
@@ -356,15 +361,15 @@ class ApplicationWindow(QMainWindow):
                                             step_duration=step_duration
                                             )
                     self._connect_signals_and_start_worker(worker)
-                except (TypeError, json.JSONDecodeError, ValueError) as e:
-                    self._refresh_statusbar("There was an error while creating the contract")
-                    print(e)
-            else:
-                self.current_contract = MyContract("[]", ui.bytecode_te.toPlainText())
-                addr = Address(decode_hex(ui.contract_le.text()))
-                addr = self.evm_handler.set_code(addr=addr, code=decode_hex(self.current_contract.bytecode.object))
-                self.storage_lookup[addr] = {}
-                self.contract_created_cb(addr)
+                else:
+                    self.current_contract = MyContract("[]", ui.bytecode_te.toPlainText())
+                    addr = Address(decode_hex(ui.contract_le.text()))
+                    addr = self.evm_handler.set_code(addr=addr, code=decode_hex(self.current_contract.bytecode.object))
+                    self.storage_lookup[addr] = {}
+                    self.contract_created_cb(addr)
+            except (TypeError, json.JSONDecodeError, ValueError) as e:
+                self._refresh_statusbar(str(e))
+                self.post_transaction_handling()
 
     def send_transaction_clicked(self):
         con: MyContract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
@@ -414,7 +419,9 @@ class ApplicationWindow(QMainWindow):
         Post transaction processes.
         """
         self._refresh_relevant_addresses()
-        self._refresh_storage(Address(decode_hex(self.ui.select_address_combobox.currentText()[2:])))
+        addr = self.ui.select_address_combobox.currentText()
+        if addr != "Load a contract first!":
+            self._refresh_storage(Address(decode_hex(addr[2:])))
         self.ui.debug_checkbox.setDisabled(False)
         self.ui.automode_checkbox.setDisabled(False)
         self.ui.send_transaction_button.setDisabled(False)
