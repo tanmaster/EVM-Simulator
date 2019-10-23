@@ -151,6 +151,7 @@ class ApplicationWindow(QMainWindow):
             self.ui.opcodes_table_widget.show()
             self.ui.stack_table_widget.show()
             self.ui.memory_table_widget.show()
+            self.ui.storage_address_label.show()
         else:
             self.ui.automode_checkbox.hide()
             self.ui.step_duration_label.hide()
@@ -161,6 +162,7 @@ class ApplicationWindow(QMainWindow):
             self.ui.opcodes_table_widget.hide()
             self.ui.stack_table_widget.hide()
             self.ui.memory_table_widget.hide()
+            self.ui.storage_address_label.hide()
         pass
 
     def show_set_storage_dialog(self):
@@ -372,7 +374,7 @@ class ApplicationWindow(QMainWindow):
                 self.post_transaction_handling()
 
     def send_transaction_clicked(self):
-        con: MyContract = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
+        con = self.relevant_addresses.get(self.ui.select_address_combobox.currentText())
         if con is None:
             self._refresh_statusbar("Please Load a Contract first via New -> Contract")
             return
@@ -465,7 +467,8 @@ class ApplicationWindow(QMainWindow):
                     cb.addItem(addr.get_readable_address())
             cb.currentIndexChanged.connect(self.contract_selected)
             cb.setCurrentIndex(cb.count() - 1)
-            if cb.count() == 1: self.contract_selected()
+            if cb.count() == 1:
+                self.contract_selected()
         else:
             self._refresh_statusbar("Error processing transaction.")
         self.post_transaction_handling()
@@ -476,20 +479,6 @@ class ApplicationWindow(QMainWindow):
         self._clear_table_widget(TableWidgetEnum.STACK)
         self._refresh_statusbar("Transaction aborted")
         MyComputation.abort = False
-
-    def show_result_signal_cb(self, result: bytes):
-        if result != b'':
-            d = QDialog()
-            d.setBaseSize(300, 300)
-            te = QPlainTextEdit(d)
-            te.setFixedSize(290, 270)
-            te.setPlainText(encode_hex(result))
-            b1 = QPushButton("OK", d)
-            b1.clicked.connect(d.close)
-            b1.move(250, 270)
-            d.setWindowTitle("Return Value")
-            d.setWindowModality(Qt.ApplicationModal)
-            d.exec_()
 
     def add_change_chain_signal_cb(self, chain: ChangeChain):
         self.change_chains.append(chain)
@@ -712,7 +701,8 @@ class ApplicationWindow(QMainWindow):
         Helper function that refreshes the displayed storage table widget with values for the specified address.
         """
         self._clear_table_widget(TableWidgetEnum.STORAGE)
-        if addr is None: return
+        if addr is None:
+            return
         self.ui.storage_address_label.setText("Address: 0x" + addr.hex())
         self.ui.storage_address_label.setToolTip("Showing storage for address: 0x" + addr.hex())
         lkp = self.storage_lookup.get(addr)
@@ -839,6 +829,21 @@ class ApplicationWindow(QMainWindow):
         util.py file.
         """
         return int(int(self.ui.debug_checkbox.checkState()) / 2 + int(self.ui.automode_checkbox.checkState()) / 2)
+
+    @staticmethod
+    def show_result_signal_cb(result: bytes):
+        if result != b'':
+            d = QDialog()
+            d.setBaseSize(300, 300)
+            te = QPlainTextEdit(d)
+            te.setFixedSize(290, 270)
+            te.setPlainText(encode_hex(result))
+            b1 = QPushButton("OK", d)
+            b1.clicked.connect(d.close)
+            b1.move(250, 270)
+            d.setWindowTitle("Return Value")
+            d.setWindowModality(Qt.ApplicationModal)
+            d.exec_()
 
 
 def main():

@@ -6,21 +6,24 @@ provide the ability to observe the effects of transactions within the Ethereum V
 time.
 
 The current landscape of Smart Contract development is one that does not truly enable developers to debug transactions 
-during execution, and aside from [Remix](http://remix.ethereum.org), there is no mainstream debugging tool 
-available. While the Remix debugger does its job well, it does not provide means to debug contracts of which the source
-code is unknown, and furthermore, it also isn't possible to debug transactions while they're being processed, but only
-after they have been mined. 
+comprehensibly during execution time, and while some debuggers like [Remix](http://remix.ethereum.org) or
+[EVM.Debugger](https://hexdocs.pm/evm/EVM.Debugger.html) and 
+[a GUI implementation of it](https://github.com/xJonathanLEI/EVMDebugger) exist, and all of them do their job well, there is no 
+debugging tool available that features:
 
-EVM-Simulator aims to resolve these issues. Using a simple GUI, users can load contracts and interact with them by sending
-transactions, either by using a predefined ABI or raw, while following the resulting changes step-by-step. It is built 
-on top of [py-evm](https://github.com/ethereum/py-evm), a well-known and widespread python implementation of the EVM, 
-which is basically used to simulate an Ethereum Blockchain. 
+- A comprehensible GUI,
+- The possibility to view transactions during execution time, before being mining,
+- Loading contracts without ABI and,
+- Supports external calls,
+- platform independence*
 
-In order to be able to read out the state variables and the world state during the execution time of a contract, it was
-necessary to swap out some of the modules that are used by py-evm, but thanks to its modularity, injecting custom 
-classes and overriding relevant functions was possible without much effort. 
+<sup>*See [Known Issues](#known-issues)</sup>
 
-This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
+EVM-Simulator aims to resolve these issues. Using a GUI, users can load contracts and interact with them by sending
+transactions, either by using a predefined ABI or raw, while following the resulting changes step-by-step. It makes use 
+of [py-evm](https://github.com/ethereum/py-evm) as main component, which is a well-known and widespread python 
+implementation of the EVM and is essentially used to emulate the Ethereum Blockchain. 
+
 
 ## Quickstart
 Here are some platform specific instructions on how to setup further necessary packages as well as the virtual 
@@ -54,12 +57,22 @@ virtualenv -p python3 venv
 # install dependencies
 pip3 install -e .
 
-# you can run the tests
+# you can run the tests with
 pytest tests/
 
 # run the application
 python app/main.py
 ```
+
+#### Used Dependencies
+As stated before, there are some external dependencies which this project relies on:
+
+    "eth-utils>=1,<2",
+    "py-evm==0.3.0a5",
+    "PyQt5==5.13.1",
+    "eth-abi==2.0.0",
+    "pysha3==1.0.2",
+    "pytest>=4.4.0",
 
     
 ## Usage
@@ -115,7 +128,7 @@ arguments, JSON-like notation is safe to use:
 argument, and the integer 3 as its value, you would enter the following into the text input: 
 3a885d790000000000000000000000000000000000000000000000000000000000000003
 
-#### Known Issues
+## Known Issues
 - Unfortunately EVM-Simulator can currently not be run on Windows. The reason is missing support for a library for py-evm.
  [See here](https://github.com/ethereum/py-evm/issues/395) for more information.
 - The block validation feature of py-evm is disabled since EVM-Simulator relies on being able to arbitrarily change the
@@ -126,15 +139,33 @@ we do not have to deal with non-trusted parties c) there is no real monetary val
 - For specific opcodes (e.g. SSTORE), the gas cost might be shown incorrectly (most likely as zero) until after its 
 execution.
 
-#### Used Dependencies
-    "eth-utils>=1,<2",
-    "py-evm==0.3.0a5",
-    "PyQt5==5.13.1",
-    "eth-abi==2.0.0",
-    "pysha3==1.0.2",
-    "pytest>=4.4.0",
-    
-#### Useful Links
+
+## Some Thoughts
+The main challenge I had to face during implementation was finding out how to hook into py-evm during computation
+time. In order to increase the maintainability and modularity of EVM-Simulator, I spent quite some time trying to look 
+for a way to make use of py-evm without making my own version of it, but rather using it as dependency, only swapping out 
+necessary components during runtime. However, thanks to its modularity, I was eventually able inject my custom classes,
+overriding relevant functions, which again enabled me to read out state variables and transaction properties during the 
+execution time of a contract.
+
+After having overcome these issues, the rest of the work consisted of making the GUI, setting up communication between 
+the GUI thread and the worker thread, testing the functionality of the evmhandler using some custom contracts, as well
+as testing the GUI.
+
+Since this was my first larger python project (and using Qt for GUI), the code quality might not be on par with
+what the makers of py-evm have created. I'm especially unhappy about the main GUI controller file, which i find extremely
+bloated and might be subject to future refactorings.
+
+## Acknowledgment
+
+Special thanks go out to @luhe from [Mattermost](https://mattermost.fsinf.at), who helped me overcome initial obstacles 
+and pointed me in the right direction.
+
+This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
+
+Thanks to Lee Thomas for his graphic [Ethereum Blockchain Mechanism](https://github.com/4c656554/BlockchainIllustrations/blob/master/Ethereum/EthBlockchain5.svg)
+
+## Useful Links
 - [How To Decipher A Smart Contract Method Call](https://medium.com/@hayeah/how-to-decipher-a-smart-contract-method-call-8ee980311603)
 - [Keccak-256 online hash function](https://emn178.github.io/online-tools/keccak_256.html)
 - [Ethereum Virtual Machine Opcodes](https://ethervm.io/)
