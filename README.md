@@ -8,8 +8,8 @@ time.
 The current landscape of Smart Contract development is one that does not truly enable developers to debug transactions 
 comprehensibly during execution time, and while some debuggers like [Remix](http://remix.ethereum.org) or
 [EVM.Debugger](https://hexdocs.pm/evm/EVM.Debugger.html) and 
-[a GUI implementation of it](https://github.com/xJonathanLEI/EVMDebugger) exist, and all of them do their job well, there is no 
-debugging tool available that features:
+[a GUI implementation of it](https://github.com/xJonathanLEI/EVMDebugger) exist, and all of them do their job well, 
+there is no debugging tool available that features:
 
 - A comprehensible GUI,
 - the possibility to view transactions during execution time, before being mined,
@@ -65,7 +65,7 @@ python app/main.py
 ```
 
 #### Used Dependencies
-These are the external dependencies which this project relies on, taken from [setup.py](setup.py):
+These are the external dependencies which the project relies on, taken from [setup.py](setup.py):
 
     "eth-utils>=1,<2",
     "py-evm==0.3.0a5",
@@ -142,22 +142,22 @@ execution.
 ## Some Thoughts
 The main challenge I had to face during implementation was finding out how to hook into py-evm during computation
 time. In order to increase the maintainability and modularity of EVM-Simulator, I spent quite some time trying to look 
-for a way to make use of py-evm without making my own version of it, but rather using it as dependency, only swapping out 
-necessary components during runtime. However, thanks to its modularity, I was eventually able inject my custom classes,
-overriding relevant functions, which again enabled me to read out state variables and transaction properties during the 
-execution time of a contract.
+for a way to make use of py-evm without making my own version of it, but rather using it as dependency, only swapping 
+out necessary components during runtime. However, thanks to its modularity, I was eventually able inject my custom 
+classes,overriding relevant functions, which again enabled me to read out state variables and transaction properties 
+during the execution time of a contract.
 
 After having overcome these issues, the rest of the work consisted of making the GUI, setting up communication between 
 the GUI thread and the worker thread, testing the functionality of the evmhandler using some custom contracts, as well
 as testing the GUI.
 
-Since this was my first larger-sized project using python (and PyQt for the GUI), the code quality might not be on par with
-what the makers of py-evm have created. I'm especially unhappy about the main GUI controller file, which I find extremely
-bloated and might be subject to future refactoring.
+Since this was my first larger-sized project using python (and PyQt for the GUI), the code quality might not be on par 
+with what the makers of py-evm have created. I'm especially unhappy about the main GUI controller file, which I find 
+extremely bloated and might be subject to future refactoring.
 
 ## Acknowledgment
-Special thanks go out to @luhe from [Mattermost](https://mattermost.fsinf.at), who helped me overcome initial obstacles 
-and pointed me in the right direction.
+Special thanks go out to [Lukas](https://github.com/lukas-hetzenecker), who helped me overcome initial obstacles and 
+pointed me in the right direction.
 
 This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
 
