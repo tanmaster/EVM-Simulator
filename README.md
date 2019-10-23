@@ -1,5 +1,5 @@
 # EVM-Simulator
-<img align="right" width="100" height="100" src="app/icon.png">
+<img align="right" width="100" height="100" alt="App Icon" src="app/icon.png">
 
 This project was created during the course of a Bachelor's Thesis at the Vienna University of Technology. Its goal is to
 provide the ability to observe the effects of transactions within the Ethereum Virtual Machine during their execution 
@@ -12,16 +12,16 @@ comprehensibly during execution time, and while some debuggers like [Remix](http
 debugging tool available that features:
 
 - A comprehensible GUI,
-- The possibility to view transactions during execution time, before being mining,
-- Loading contracts without ABI and,
-- Supports external calls,
+- the possibility to view transactions during execution time, before being mined,
+- loading contracts without ABI,
+- supports external calls and
 - platform independence*
 
 <sup>*See [Known Issues](#known-issues)</sup>
 
 EVM-Simulator aims to resolve these issues. Using a GUI, users can load contracts and interact with them by sending
 transactions, either by using a predefined ABI or raw, while following the resulting changes step-by-step. It makes use 
-of [py-evm](https://github.com/ethereum/py-evm) as main component, which is a well-known and widespread python 
+of [py-evm](https://github.com/ethereum/py-evm) as main component, which is a well-known and proven python 
 implementation of the EVM and is essentially used to emulate the Ethereum Blockchain. 
 
 
@@ -163,7 +163,7 @@ and pointed me in the right direction.
 
 This project was initially forked from [Template for new Python Ethereum repositories](https://github.com/ethereum/ethereum-python-project-template).
 
-Thanks to Lee Thomas for his graphic [Ethereum Blockchain Mechanism](https://github.com/4c656554/BlockchainIllustrations/blob/master/Ethereum/EthBlockchain5.svg)
+Thanks to Lee Thomas for his graphic [Ethereum Blockchain Mechanism](https://github.com/4c656554/BlockchainIllustrations/blob/master/Ethereum/EthBlockchain5.svg).
 
 ## Useful Links
 - [How To Decipher A Smart Contract Method Call](https://medium.com/@hayeah/how-to-decipher-a-smart-contract-method-call-8ee980311603)
