@@ -65,7 +65,7 @@ python app/main.py
 ```
 
 #### Used Dependencies
-As stated before, there are some external dependencies which this project relies on:
+These are the external dependencies which this project relies on, taken from [setup.py](setup.py):
 
     "eth-utils>=1,<2",
     "py-evm==0.3.0a5",
