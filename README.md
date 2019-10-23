@@ -57,7 +57,7 @@ virtualenv -p python3 venv
 # install dependencies
 pip3 install -e .
 
-# you can run the tests with
+# run tests with
 pytest tests/
 
 # run the application
@@ -129,8 +129,8 @@ argument, and the integer 3 as its value, you would enter the following into the
 3a885d790000000000000000000000000000000000000000000000000000000000000003
 
 ## Known Issues
-- Unfortunately EVM-Simulator can currently not be run on Windows. The reason is missing support for a library for py-evm.
- [See here](https://github.com/ethereum/py-evm/issues/395) for more information.
+- Unfortunately EVM-Simulator cannot currently be run on Windows. The reason is missing support for one of py-evm's 
+libraries. [See here](https://github.com/ethereum/py-evm/issues/395) for more information.
 - The block validation feature of py-evm is disabled since EVM-Simulator relies on being able to arbitrarily change the
 world state. However this shouldn't be an issue since a) the user imposes the changes himself and b) 
 we do not have to deal with non-trusted parties c) there is no real monetary value behind in the underlying chain.
@@ -138,7 +138,6 @@ we do not have to deal with non-trusted parties c) there is no real monetary val
 - Getting refunds from freeing used storage is currently not displayed correctly.
 - For specific opcodes (e.g. SSTORE), the gas cost might be shown incorrectly (most likely as zero) until after its 
 execution.
-
 
 ## Some Thoughts
 The main challenge I had to face during implementation was finding out how to hook into py-evm during computation
@@ -152,12 +151,11 @@ After having overcome these issues, the rest of the work consisted of making the
 the GUI thread and the worker thread, testing the functionality of the evmhandler using some custom contracts, as well
 as testing the GUI.
 
-Since this was my first larger python project (and using Qt for GUI), the code quality might not be on par with
-what the makers of py-evm have created. I'm especially unhappy about the main GUI controller file, which i find extremely
-bloated and might be subject to future refactorings.
+Since this was my first larger-sized project using python (and PyQt for the GUI), the code quality might not be on par with
+what the makers of py-evm have created. I'm especially unhappy about the main GUI controller file, which I find extremely
+bloated and might be subject to future refactoring.
 
 ## Acknowledgment
-
 Special thanks go out to @luhe from [Mattermost](https://mattermost.fsinf.at), who helped me overcome initial obstacles 
 and pointed me in the right direction.
 
