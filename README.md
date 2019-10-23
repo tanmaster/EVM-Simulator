@@ -144,7 +144,7 @@ The main challenge I had to face during implementation was finding out how to ho
 time. In order to increase the maintainability and modularity of EVM-Simulator, I spent quite some time trying to look 
 for a way to make use of py-evm without making my own version of it, but rather using it as dependency, only swapping 
 out necessary components during runtime. However, thanks to its modularity, I was eventually able inject my custom 
-classes,overriding relevant functions, which again enabled me to read out state variables and transaction properties 
+classes, overriding relevant functions, which again enabled me to read out state variables and transaction properties 
 during the execution time of a contract.
 
 After having overcome these issues, the rest of the work consisted of making the GUI, setting up communication between 
