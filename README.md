@@ -92,8 +92,8 @@ You can either:
 trying to debug contracts from any other Ethereum Blockchain, which you don't know the source code of.
 
 Note that when using the latter option, you will lose the ability to select a contract's function. Much rather you will 
-have to enter the raw input data, which you will have to compute yourself. Please see the bottom of this page for more 
-resources on this matter.
+have to enter the raw input data, which you will have to compute yourself. Please see the bottom of this section for more 
+information on this matter.
 
 Using the first option, you might notice that the expected input formats of ABI and bytecode are exactly the same as the 
 output formats you would get if you'd compile a contract in [Remix](http://remix.ethereum.org). If you load a contract 
