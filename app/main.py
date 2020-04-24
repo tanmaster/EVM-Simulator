@@ -507,7 +507,8 @@ class ApplicationWindow(QMainWindow):
         # for 20k or just for 15k or you might even get a refund) so we fill in those gas prices once the information
         # is available
         v = self.ui.opcodes_table_widget.item(pc - 1, 2)
-        v.setText(str(last_gas))
+        if v is not None:
+            v.setText(str(last_gas))
 
         # handling changes in stack stack
         self._clear_table_widget(TableWidgetEnum.STACK)
@@ -568,6 +569,11 @@ class ApplicationWindow(QMainWindow):
 
         # reset the program counter, it might not be 0 and we need the whole thing.
         code.pc = 0
+
+        # this variable will be used to skip rounds of the iteration.
+        # e.g. we read in the opcode push1 -> we will skip the next round (of drawing mnemonic)
+        # e.g. we read push10 -> we skip 10 rounds
+        skip = 0
         for opcode in code:
             c = self.ui.opcodes_table_widget.rowCount()
             self.ui.opcodes_table_widget.insertRow(c)
@@ -577,15 +583,22 @@ class ApplicationWindow(QMainWindow):
                 opcode_fn = InvalidOpcode(opcode)
 
             o = QTableWidgetItem()
+            o.setText(hex2(opcode))
+            self.ui.opcodes_table_widget.setItem(c, 0, o)
+
+            if skip > 0:
+                skip = skip - 1
+                continue
+
             m = QTableWidgetItem()
             g = QTableWidgetItem()
-            o.setText(hex2(opcode))
             m.setText(opcode_fn.mnemonic)
             g.setText(str(opcode_fn.gas_cost))
             g.setTextAlignment(130)
-            self.ui.opcodes_table_widget.setItem(c, 0, o)
             self.ui.opcodes_table_widget.setItem(c, 1, m)
             self.ui.opcodes_table_widget.setItem(c, 2, g)
+            if 0x60 <= opcode <= 0x7f:
+                skip = opcode - 0x5f
 
         self.ui.origin_label.setText("origin: 0x" + MASTER_ADDRESS.hex())
         self.ui.origin_label.setToolTip("origin: 0x" + MASTER_ADDRESS.hex())
