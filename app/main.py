@@ -1,9 +1,12 @@
 import json
 import logging
+import operator
+import signal
 import sys
+from threading import Lock
 from types import FunctionType
 from typing import Dict, Any
-from threading import Lock
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QDesktopServices, QFont, QBrush, QColor, QIcon
 from PyQt5.QtWidgets import *
@@ -15,18 +18,17 @@ from eth_utils import ValidationError, decode_hex, encode_hex
 from eth_utils.units import units
 
 from app import evmhandler
-from app.util.changes import ChangeChainLink, TableWidgetEnum, ChangeChain, History
 from app.evmhandler import EVMHandler, MASTER_ADDRESS
 from app.subcomponents.mycomputation import MyComputation
-from app.util.workers import TransactionWorker, ContractWorker, BaseWorker
 from app.ui.ui_add_addresses import Ui_AddAdressesDialog
 from app.ui.ui_add_contract import Ui_AddContractDialog
 from app.ui.ui_main import Ui_MainWindow
 from app.ui.ui_set_gas_limit import Ui_SetGasLimitDialog
 from app.ui.ui_set_gas_price import Ui_SetGasPriceDialog
 from app.ui.ui_set_storage import Ui_set_storage_dialog
+from app.util.changes import ChangeChainLink, TableWidgetEnum, ChangeChain, History
 from app.util.util import MyContract, MyTransaction, hex2, MyAddress
-import operator
+from app.util.workers import TransactionWorker, ContractWorker, BaseWorker
 
 logger = logging.getLogger(__name__)
 
@@ -82,13 +84,10 @@ class ApplicationWindow(QMainWindow):
         #   slot -> index
         # }
         self.storage_lookup: {{}} = {}
-        self.table_lookup = {
-            TableWidgetEnum.OPCODES: self.ui.opcodes_table_widget,
-            TableWidgetEnum.STACK: self.ui.stack_table_widget,
-            TableWidgetEnum.MEMORY: self.ui.memory_table_widget,
+        self.table_lookup = {TableWidgetEnum.OPCODES: self.ui.opcodes_table_widget,
+            TableWidgetEnum.STACK: self.ui.stack_table_widget, TableWidgetEnum.MEMORY: self.ui.memory_table_widget,
             TableWidgetEnum.STORAGE: self.ui.storage_table_widget,
-            TableWidgetEnum.ADDRESSES: self.ui.used_addresses_table_widget
-        }
+            TableWidgetEnum.ADDRESSES: self.ui.used_addresses_table_widget}
         self.change_chains: [ChangeChain] = []
         self.history = History()
         self.current_contract: MyContract = None
@@ -360,8 +359,7 @@ class ApplicationWindow(QMainWindow):
                                             wei, self._current_debug_mode(), storage_lookup=self.storage_lookup,
                                             init_lock=self.init_lock, step_lock=self.step_lock,
                                             storage_lock=self.storage_lock, step_semaphore=self.step_semaphore,
-                                            step_duration=step_duration
-                                            )
+                                            step_duration=step_duration)
                     self._connect_signals_and_start_worker(worker)
                 else:
                     self.current_contract = MyContract("[]", ui.bytecode_te.toPlainText())
@@ -394,8 +392,7 @@ class ApplicationWindow(QMainWindow):
                                                       self._current_debug_mode(), wei,
                                                       storage_lookup=self.storage_lookup, init_lock=self.init_lock,
                                                       step_lock=self.step_lock, storage_lock=self.storage_lock,
-                                                      step_semaphore=self.step_semaphore, step_duration=step_duration
-                                                      )
+                                                      step_semaphore=self.step_semaphore, step_duration=step_duration)
         self._connect_signals_and_start_worker(worker)
 
     def contract_function_selected(self):
@@ -700,8 +697,7 @@ class ApplicationWindow(QMainWindow):
                     else:  # reset
                         it: QTableWidgetItem = QTableWidgetItem()
                         it.setText(item.text())
-                        if link.widget == TableWidgetEnum.OPCODES and i == 2 \
-                                or link.widget == TableWidgetEnum.STORAGE and i == 1:
+                        if link.widget == TableWidgetEnum.OPCODES and i == 2 or link.widget == TableWidgetEnum.STORAGE and i == 1:
                             it.setTextAlignment(130)
                         widget.setItem(index, i, it)
 
@@ -734,9 +730,9 @@ class ApplicationWindow(QMainWindow):
                 self.ui.storage_table_widget.setItem(lkp.get(slot), 1, v)
 
     def _refresh_statusbar(self, status: str = ""):
-        self.blockLabel.setText("Current Block: " + str(self.evm_handler.get_block_number())
-                                + " | Gas Price: " + str(self.evm_handler.get_gas_price()) + " wei"
-                                + " | Current Gas Limit: " + str(self.evm_handler.get_gas_limit()))
+        self.blockLabel.setText("Current Block: " + str(self.evm_handler.get_block_number()) + " | Gas Price: " + str(
+            self.evm_handler.get_gas_price()) + " wei" + " | Current Gas Limit: " + str(
+            self.evm_handler.get_gas_limit()))
         self.statusLabel.setText("  " + status)
 
     def _refresh_relevant_addresses(self):
@@ -862,7 +858,8 @@ class ApplicationWindow(QMainWindow):
 def main():
     logging.basicConfig()
     logging.getLogger().setLevel(logging.WARN)
-
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('icon.png'))
     application = ApplicationWindow()
