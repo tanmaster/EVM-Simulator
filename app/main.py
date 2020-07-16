@@ -368,7 +368,7 @@ class ApplicationWindow(QMainWindow):
                     addr = Address(decode_hex(ui.contract_le.text()))
                     addr = self.evm_handler.set_code(addr=addr, code=decode_hex(self.current_contract.bytecode.object))
                     self.storage_lookup[addr] = {}
-                    self.contract_created_cb(addr)
+                    self.contract_created_signal_cb(addr)
             except (TypeError, json.JSONDecodeError, ValueError) as e:
                 self._refresh_statusbar(str(e))
                 self.post_transaction_handling()
