@@ -123,7 +123,7 @@ arguments, JSON-like notation is safe to use:
 - Numeric values can be entered as is e.g: 1
 - Strings should be enclosed by double quotation marks e.g.: "This is a string!"
 - Arrays should be enclosed by square brackets: [0, 1, 2, 3]
-- Addresses can be passed as like this: 0xaffe... (40 characters long hex string)
+- Addresses can be passed like this: 0xaffe... (40 characters long hex string)
 - Raw data can be passed as is. For example if you wanted to call a function "setVar" which takes a uint256 as only 
 argument, and the integer 3 as its value, you would enter the following into the text input: 
 3a885d790000000000000000000000000000000000000000000000000000000000000003
