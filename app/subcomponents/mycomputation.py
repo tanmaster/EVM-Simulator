@@ -247,7 +247,7 @@ class MyComputation(IstanbulComputation):
             )
 
         cls.add_chain.emit(chain)
-        cls.pre_computation.emit(computation.get_gas_remaining(), computation.code.pc)
+        cls.pre_computation.emit(computation.get_gas_remaining(), computation.code.pc - 1)
         if cls.debug_mode:
             cls.step_lock.acquire(True)
 
