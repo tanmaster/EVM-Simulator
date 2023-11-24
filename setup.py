@@ -26,7 +26,7 @@ setup(
         "eth-utils>=1,<2",
         "py-evm==0.3.0a5",
         "PyQt5==5.13.1",
-        "eth-abi==2.0.0",
+        "eth-abi==4.2.0",
         "pysha3==1.0.2",
         "pytest>=4.4.0",
     ],
